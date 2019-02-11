@@ -5,7 +5,7 @@
 'use strict';
 
 (function() {
-  var mojomId = 'content/shell/common/layout_test/fake_bluetooth_chooser.mojom';
+  var mojomId = 'content/shell/common/web_test/fake_bluetooth_chooser.mojom';
   if (mojo.internal.isMojomLoaded(mojomId)) {
     console.warn('The following mojom is loaded multiple times: ' + mojomId);
     return;
@@ -30,6 +30,8 @@
   ChooserEventType.DISCOVERING = ChooserEventType.DISCOVERY_FAILED_TO_START + 1;
   ChooserEventType.DISCOVERY_IDLE = ChooserEventType.DISCOVERING + 1;
   ChooserEventType.ADD_DEVICE = ChooserEventType.DISCOVERY_IDLE + 1;
+  ChooserEventType.MIN_VALUE = 0,
+  ChooserEventType.MAX_VALUE = 9,
 
   ChooserEventType.isKnownEnumValue = function(value) {
     switch (value) {
@@ -305,52 +307,6 @@
     encoder.writeUint32(0);
     encoder.encodeStruct(codec.String, val.peripheralAddress);
   };
-  function FakeBluetoothChooser_SelectPeripheral_ResponseParams(values) {
-    this.initDefaults_();
-    this.initFields_(values);
-  }
-
-
-  FakeBluetoothChooser_SelectPeripheral_ResponseParams.prototype.initDefaults_ = function() {
-  };
-  FakeBluetoothChooser_SelectPeripheral_ResponseParams.prototype.initFields_ = function(fields) {
-    for(var field in fields) {
-        if (this.hasOwnProperty(field))
-          this[field] = fields[field];
-    }
-  };
-
-  FakeBluetoothChooser_SelectPeripheral_ResponseParams.validate = function(messageValidator, offset) {
-    var err;
-    err = messageValidator.validateStructHeader(offset, codec.kStructHeaderSize);
-    if (err !== validator.validationError.NONE)
-        return err;
-
-    var kVersionSizes = [
-      {version: 0, numBytes: 8}
-    ];
-    err = messageValidator.validateStructVersion(offset, kVersionSizes);
-    if (err !== validator.validationError.NONE)
-        return err;
-
-    return validator.validationError.NONE;
-  };
-
-  FakeBluetoothChooser_SelectPeripheral_ResponseParams.encodedSize = codec.kStructHeaderSize + 0;
-
-  FakeBluetoothChooser_SelectPeripheral_ResponseParams.decode = function(decoder) {
-    var packed;
-    var val = new FakeBluetoothChooser_SelectPeripheral_ResponseParams();
-    var numberOfBytes = decoder.readUint32();
-    var version = decoder.readUint32();
-    return val;
-  };
-
-  FakeBluetoothChooser_SelectPeripheral_ResponseParams.encode = function(encoder, val) {
-    var packed;
-    encoder.writeUint32(FakeBluetoothChooser_SelectPeripheral_ResponseParams.encodedSize);
-    encoder.writeUint32(0);
-  };
   function FakeBluetoothChooser_Cancel_Params(values) {
     this.initDefaults_();
     this.initFields_(values);
@@ -395,52 +351,6 @@
   FakeBluetoothChooser_Cancel_Params.encode = function(encoder, val) {
     var packed;
     encoder.writeUint32(FakeBluetoothChooser_Cancel_Params.encodedSize);
-    encoder.writeUint32(0);
-  };
-  function FakeBluetoothChooser_Cancel_ResponseParams(values) {
-    this.initDefaults_();
-    this.initFields_(values);
-  }
-
-
-  FakeBluetoothChooser_Cancel_ResponseParams.prototype.initDefaults_ = function() {
-  };
-  FakeBluetoothChooser_Cancel_ResponseParams.prototype.initFields_ = function(fields) {
-    for(var field in fields) {
-        if (this.hasOwnProperty(field))
-          this[field] = fields[field];
-    }
-  };
-
-  FakeBluetoothChooser_Cancel_ResponseParams.validate = function(messageValidator, offset) {
-    var err;
-    err = messageValidator.validateStructHeader(offset, codec.kStructHeaderSize);
-    if (err !== validator.validationError.NONE)
-        return err;
-
-    var kVersionSizes = [
-      {version: 0, numBytes: 8}
-    ];
-    err = messageValidator.validateStructVersion(offset, kVersionSizes);
-    if (err !== validator.validationError.NONE)
-        return err;
-
-    return validator.validationError.NONE;
-  };
-
-  FakeBluetoothChooser_Cancel_ResponseParams.encodedSize = codec.kStructHeaderSize + 0;
-
-  FakeBluetoothChooser_Cancel_ResponseParams.decode = function(decoder) {
-    var packed;
-    var val = new FakeBluetoothChooser_Cancel_ResponseParams();
-    var numberOfBytes = decoder.readUint32();
-    var version = decoder.readUint32();
-    return val;
-  };
-
-  FakeBluetoothChooser_Cancel_ResponseParams.encode = function(encoder, val) {
-    var packed;
-    encoder.writeUint32(FakeBluetoothChooser_Cancel_ResponseParams.encodedSize);
     encoder.writeUint32(0);
   };
   function FakeBluetoothChooser_Rescan_Params(values) {
@@ -535,10 +445,10 @@
     encoder.writeUint32(FakeBluetoothChooser_Rescan_ResponseParams.encodedSize);
     encoder.writeUint32(0);
   };
-  var kFakeBluetoothChooser_WaitForEvents_Name = 457051710;
-  var kFakeBluetoothChooser_SelectPeripheral_Name = 1924310743;
-  var kFakeBluetoothChooser_Cancel_Name = 1388880682;
-  var kFakeBluetoothChooser_Rescan_Name = 2112671529;
+  var kFakeBluetoothChooser_WaitForEvents_Name = 0;
+  var kFakeBluetoothChooser_SelectPeripheral_Name = 1;
+  var kFakeBluetoothChooser_Cancel_Name = 2;
+  var kFakeBluetoothChooser_Rescan_Name = 3;
 
   function FakeBluetoothChooserPtr(handleOrPtrInfo) {
     this.ptr = new bindings.InterfacePtrController(FakeBluetoothChooser,
@@ -564,14 +474,14 @@
   };
 
   FakeBluetoothChooserProxy.prototype.waitForEvents = function(numOfEvents) {
-    var params = new FakeBluetoothChooser_WaitForEvents_Params();
-    params.numOfEvents = numOfEvents;
+    var params_ = new FakeBluetoothChooser_WaitForEvents_Params();
+    params_.numOfEvents = numOfEvents;
     return new Promise(function(resolve, reject) {
       var builder = new codec.MessageV1Builder(
           kFakeBluetoothChooser_WaitForEvents_Name,
           codec.align(FakeBluetoothChooser_WaitForEvents_Params.encodedSize),
           codec.kMessageExpectsResponse, 0);
-      builder.encodeStruct(FakeBluetoothChooser_WaitForEvents_Params, params);
+      builder.encodeStruct(FakeBluetoothChooser_WaitForEvents_Params, params_);
       var message = builder.finish();
       this.receiver_.acceptAndExpectResponse(message).then(function(message) {
         var reader = new codec.MessageReader(message);
@@ -589,24 +499,14 @@
   };
 
   FakeBluetoothChooserProxy.prototype.selectPeripheral = function(peripheralAddress) {
-    var params = new FakeBluetoothChooser_SelectPeripheral_Params();
-    params.peripheralAddress = peripheralAddress;
-    return new Promise(function(resolve, reject) {
-      var builder = new codec.MessageV1Builder(
-          kFakeBluetoothChooser_SelectPeripheral_Name,
-          codec.align(FakeBluetoothChooser_SelectPeripheral_Params.encodedSize),
-          codec.kMessageExpectsResponse, 0);
-      builder.encodeStruct(FakeBluetoothChooser_SelectPeripheral_Params, params);
-      var message = builder.finish();
-      this.receiver_.acceptAndExpectResponse(message).then(function(message) {
-        var reader = new codec.MessageReader(message);
-        var responseParams =
-            reader.decodeStruct(FakeBluetoothChooser_SelectPeripheral_ResponseParams);
-        resolve(responseParams);
-      }).catch(function(result) {
-        reject(Error("Connection error: " + result));
-      });
-    }.bind(this));
+    var params_ = new FakeBluetoothChooser_SelectPeripheral_Params();
+    params_.peripheralAddress = peripheralAddress;
+    var builder = new codec.MessageV0Builder(
+        kFakeBluetoothChooser_SelectPeripheral_Name,
+        codec.align(FakeBluetoothChooser_SelectPeripheral_Params.encodedSize));
+    builder.encodeStruct(FakeBluetoothChooser_SelectPeripheral_Params, params_);
+    var message = builder.finish();
+    this.receiver_.accept(message);
   };
   FakeBluetoothChooserPtr.prototype.cancel = function() {
     return FakeBluetoothChooserProxy.prototype.cancel
@@ -614,23 +514,13 @@
   };
 
   FakeBluetoothChooserProxy.prototype.cancel = function() {
-    var params = new FakeBluetoothChooser_Cancel_Params();
-    return new Promise(function(resolve, reject) {
-      var builder = new codec.MessageV1Builder(
-          kFakeBluetoothChooser_Cancel_Name,
-          codec.align(FakeBluetoothChooser_Cancel_Params.encodedSize),
-          codec.kMessageExpectsResponse, 0);
-      builder.encodeStruct(FakeBluetoothChooser_Cancel_Params, params);
-      var message = builder.finish();
-      this.receiver_.acceptAndExpectResponse(message).then(function(message) {
-        var reader = new codec.MessageReader(message);
-        var responseParams =
-            reader.decodeStruct(FakeBluetoothChooser_Cancel_ResponseParams);
-        resolve(responseParams);
-      }).catch(function(result) {
-        reject(Error("Connection error: " + result));
-      });
-    }.bind(this));
+    var params_ = new FakeBluetoothChooser_Cancel_Params();
+    var builder = new codec.MessageV0Builder(
+        kFakeBluetoothChooser_Cancel_Name,
+        codec.align(FakeBluetoothChooser_Cancel_Params.encodedSize));
+    builder.encodeStruct(FakeBluetoothChooser_Cancel_Params, params_);
+    var message = builder.finish();
+    this.receiver_.accept(message);
   };
   FakeBluetoothChooserPtr.prototype.rescan = function() {
     return FakeBluetoothChooserProxy.prototype.rescan
@@ -638,13 +528,13 @@
   };
 
   FakeBluetoothChooserProxy.prototype.rescan = function() {
-    var params = new FakeBluetoothChooser_Rescan_Params();
+    var params_ = new FakeBluetoothChooser_Rescan_Params();
     return new Promise(function(resolve, reject) {
       var builder = new codec.MessageV1Builder(
           kFakeBluetoothChooser_Rescan_Name,
           codec.align(FakeBluetoothChooser_Rescan_Params.encodedSize),
           codec.kMessageExpectsResponse, 0);
-      builder.encodeStruct(FakeBluetoothChooser_Rescan_Params, params);
+      builder.encodeStruct(FakeBluetoothChooser_Rescan_Params, params_);
       var message = builder.finish();
       this.receiver_.acceptAndExpectResponse(message).then(function(message) {
         var reader = new codec.MessageReader(message);
@@ -676,6 +566,14 @@
   FakeBluetoothChooserStub.prototype.accept = function(message) {
     var reader = new codec.MessageReader(message);
     switch (reader.messageName) {
+    case kFakeBluetoothChooser_SelectPeripheral_Name:
+      var params = reader.decodeStruct(FakeBluetoothChooser_SelectPeripheral_Params);
+      this.selectPeripheral(params.peripheralAddress);
+      return true;
+    case kFakeBluetoothChooser_Cancel_Name:
+      var params = reader.decodeStruct(FakeBluetoothChooser_Cancel_Params);
+      this.cancel();
+      return true;
     default:
       return false;
     }
@@ -696,36 +594,6 @@
             codec.align(FakeBluetoothChooser_WaitForEvents_ResponseParams.encodedSize),
             codec.kMessageIsResponse, reader.requestID);
         builder.encodeStruct(FakeBluetoothChooser_WaitForEvents_ResponseParams,
-                             responseParams);
-        var message = builder.finish();
-        responder.accept(message);
-      });
-      return true;
-    case kFakeBluetoothChooser_SelectPeripheral_Name:
-      var params = reader.decodeStruct(FakeBluetoothChooser_SelectPeripheral_Params);
-      this.selectPeripheral(params.peripheralAddress).then(function(response) {
-        var responseParams =
-            new FakeBluetoothChooser_SelectPeripheral_ResponseParams();
-        var builder = new codec.MessageV1Builder(
-            kFakeBluetoothChooser_SelectPeripheral_Name,
-            codec.align(FakeBluetoothChooser_SelectPeripheral_ResponseParams.encodedSize),
-            codec.kMessageIsResponse, reader.requestID);
-        builder.encodeStruct(FakeBluetoothChooser_SelectPeripheral_ResponseParams,
-                             responseParams);
-        var message = builder.finish();
-        responder.accept(message);
-      });
-      return true;
-    case kFakeBluetoothChooser_Cancel_Name:
-      var params = reader.decodeStruct(FakeBluetoothChooser_Cancel_Params);
-      this.cancel().then(function(response) {
-        var responseParams =
-            new FakeBluetoothChooser_Cancel_ResponseParams();
-        var builder = new codec.MessageV1Builder(
-            kFakeBluetoothChooser_Cancel_Name,
-            codec.align(FakeBluetoothChooser_Cancel_ResponseParams.encodedSize),
-            codec.kMessageIsResponse, reader.requestID);
-        builder.encodeStruct(FakeBluetoothChooser_Cancel_ResponseParams,
                              responseParams);
         var message = builder.finish();
         responder.accept(message);
@@ -760,11 +628,11 @@
           paramsClass = FakeBluetoothChooser_WaitForEvents_Params;
       break;
       case kFakeBluetoothChooser_SelectPeripheral_Name:
-        if (message.expectsResponse())
+        if (!message.expectsResponse() && !message.isResponse())
           paramsClass = FakeBluetoothChooser_SelectPeripheral_Params;
       break;
       case kFakeBluetoothChooser_Cancel_Name:
-        if (message.expectsResponse())
+        if (!message.expectsResponse() && !message.isResponse())
           paramsClass = FakeBluetoothChooser_Cancel_Params;
       break;
       case kFakeBluetoothChooser_Rescan_Name:
@@ -784,14 +652,6 @@
       case kFakeBluetoothChooser_WaitForEvents_Name:
         if (message.isResponse())
           paramsClass = FakeBluetoothChooser_WaitForEvents_ResponseParams;
-        break;
-      case kFakeBluetoothChooser_SelectPeripheral_Name:
-        if (message.isResponse())
-          paramsClass = FakeBluetoothChooser_SelectPeripheral_ResponseParams;
-        break;
-      case kFakeBluetoothChooser_Cancel_Name:
-        if (message.isResponse())
-          paramsClass = FakeBluetoothChooser_Cancel_ResponseParams;
         break;
       case kFakeBluetoothChooser_Rescan_Name:
         if (message.isResponse())
