@@ -15,21 +15,49 @@ window.assert_times_equal = (actual, expected, description) => {
 </script>
 <script src="/web-animations/testcommon.js"></script>
 <script src="common.js"></script>
+<style>
+  .scroller {
+    overflow: auto;
+    height: 100px;
+    width: 100px;
+  }
+  .contents {
+    height: 1000px;
+    width: 100%;
+  }
+</style>
 <body>
 <div id="log"></div>
 <script>
 'use strict';
 
-function InstantiateWorkletAnimation(test) {
+function createWorkletAnimation(test) {
   const DURATION = 10000; // ms
   const KEYFRAMES = { height : ['100px', '50px'] };
   return new WorkletAnimation('passthrough', new KeyframeEffect(createDiv(test),
         KEYFRAMES, DURATION), document.timeline);
 }
 
+function createScroller(test) {
+  var holder = createDiv(test);
+  holder.innerHTML = "<div class='scroller'><div class='contents'></div></div>";
+  return holder.firstChild;
+}
+
+function createScrollLinkedWorkletAnimation(test) {
+  const timeline = new ScrollTimeline({
+    scrollSource: createScroller(test),
+    timeRange: 1000
+  });
+  const DURATION = 10000; // ms
+  const KEYFRAMES = { height : ['100px', '50px'] };
+  return new WorkletAnimation('passthrough', new KeyframeEffect(createDiv(test),
+        KEYFRAMES, DURATION), timeline);
+}
+
 promise_test(async t => {
   await registerPassthroughAnimator();
-  const animation = InstantiateWorkletAnimation(t);
+  const animation = createWorkletAnimation(t);
 
   animation.playbackRate = 0.5;
   animation.play();
@@ -39,7 +67,7 @@ promise_test(async t => {
 
 promise_test(async t => {
   await registerPassthroughAnimator();
-  const animation = InstantiateWorkletAnimation(t);
+  const animation = createWorkletAnimation(t);
 
   animation.play();
   animation.playbackRate = 0.5;
@@ -49,7 +77,7 @@ promise_test(async t => {
 
 promise_test(async t => {
   await registerPassthroughAnimator();
-  const animation = InstantiateWorkletAnimation(t);
+  const animation = createWorkletAnimation(t);
   const playbackRate = 2;
 
   animation.play();
@@ -66,14 +94,14 @@ promise_test(async t => {
 
 promise_test(async t => {
   await registerPassthroughAnimator();
-  const animation = InstantiateWorkletAnimation(t);
+  const animation = createWorkletAnimation(t);
   const playbackRate = 2;
 
   animation.play();
 
   await waitForNextFrame();
 
-  // Set playback rate while the animation is playing
+  // Set playback rate while the animation is playing.
   const prevCurrentTime = animation.currentTime;
   const prevTimelineTime = document.timeline.currentTime;
   animation.playbackRate = playbackRate;
@@ -91,7 +119,7 @@ promise_test(async t => {
 
 promise_test(async t => {
   await registerPassthroughAnimator();
-  const animation = InstantiateWorkletAnimation(t);;
+  const animation = createWorkletAnimation(t);
   const playbackRate = 2;
 
   // Set playback rate while the animation is in 'idle' state.
@@ -136,5 +164,148 @@ promise_test(async t => {
    'with the current time of its WorkletAnimation and produces correct ' +
    'visual result.');
 
+promise_test(async t => {
+  await registerPassthroughAnimator();
+  const animation = createScrollLinkedWorkletAnimation(t);
+  const scroller = animation.timeline.scrollSource;
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+  const timeRange = animation.timeline.timeRange;
+  scroller.scrollTop = 0.2 * maxScroll;
+
+  await waitForNextFrame();
+  animation.playbackRate = 0.5;
+  animation.play();
+  await waitForNextFrame();
+  assert_equals(animation.currentTime, 0.2 * timeRange,
+    'Initial current time is not affected by playbackRate.');
+}, 'Initial current time is not affected by playbackRate set while ' +
+   'scroll-linked animation is in idle state.');
+
+promise_test(async t => {
+  await registerPassthroughAnimator();
+  const animation = createScrollLinkedWorkletAnimation(t);
+  const scroller = animation.timeline.scrollSource;
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+  const timeRange = animation.timeline.timeRange;
+  scroller.scrollTop = 0.2 * maxScroll;
+
+  animation.play();
+  animation.playbackRate = 0.5;
+  await waitForNextFrame();
+
+  assert_equals(animation.currentTime, 0.2 * timeRange,
+    'Initial current time is not affected by playbackRate.');
+}, 'Initial current time is not affected by playbackRate set while '+
+   'scroll-linked animation is in play-pending state.');
+
+promise_test(async t => {
+  await registerPassthroughAnimator();
+  const animation = createScrollLinkedWorkletAnimation(t);
+  const scroller = animation.timeline.scrollSource;
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+  const timeRange = animation.timeline.timeRange;
+  const playbackRate = 2;
+  await waitForNextFrame();
+
+  animation.play();
+  scroller.scrollTop = 0.2 * maxScroll;
+
+  await waitForNextFrame();
+
+  // Set playback rate while the animation is playing.
+  animation.playbackRate = playbackRate;
+
+  assert_times_equal(animation.currentTime, 0.2 * timeRange,
+    'The current time should stay unaffected by setting playback rate.');
+}, 'The current time is not affected by playbackRate set while the ' +
+   'scroll-linked animation is in play state.');
+
+promise_test(async t => {
+  await registerPassthroughAnimator();
+  const animation = createScrollLinkedWorkletAnimation(t);
+  const scroller = animation.timeline.scrollSource;
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+  const playbackRate = 2;
+  const timeRange = animation.timeline.timeRange;
+
+  animation.play();
+
+  await waitForNextFrame();
+  scroller.scrollTop = 0.1 * maxScroll;
+
+  // Set playback rate while the animation is playing.
+  animation.playbackRate = playbackRate;
+
+  // Advance the animation some more.
+  await waitForNextFrame();
+  scroller.scrollTop = 0.2 * maxScroll;
+
+  await waitForNextFrame();
+  assert_times_equal(
+    animation.currentTime - 0.1 * timeRange, 0.1 * timeRange * playbackRate,
+    'The current time should increase two times faster than scroll timeline.');
+}, 'Scroll-linked animation playback rate affects the rate of progress of ' +
+   'the current time.');
+
+promise_test(async t => {
+  await registerPassthroughAnimator();
+  const animation = createScrollLinkedWorkletAnimation(t);
+  const scroller = animation.timeline.scrollSource;
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+  const timeRange = animation.timeline.timeRange;
+  const playbackRate = 2;
+
+  // Set playback rate while the animation is in 'idle' state.
+  animation.playbackRate = playbackRate;
+  animation.play();
+  await waitForNextFrame();
+  scroller.scrollTop = 0.2 * maxScroll;
+
+  await waitForNextFrame();
+
+  assert_times_equal(animation.currentTime, 0.2 * timeRange * playbackRate,
+    'The current time should increase two times faster than timeline.');
+}, 'The playback rate set before scroll-linked animation started playing ' +
+   'affects the rate of progress of the current time');
+
+promise_test(async t => {
+  await registerPassthroughAnimator();
+  const scroller = createScroller(t);
+  const timeline = new ScrollTimeline({
+    scrollSource: scroller,
+    timeRange: 1000
+  });
+  const timing = { duration: 1000,
+                   easing: 'linear',
+                   fill: 'none',
+                   iterations: 1
+                 };
+  const target = createDiv(t);
+  const keyframeEffect = new KeyframeEffect(target, { opacity: [0, 1] }, timing);
+  const animation = new WorkletAnimation('passthrough', keyframeEffect, timeline);
+  const playbackRate = 2;
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+  const timeRange = timeline.timeRange;
+
+  animation.play();
+  animation.playbackRate = playbackRate;
+  await waitForNextFrame();
+
+  scroller.scrollTop = 0.2 * maxScroll;
+  await waitForNextFrame();
+
+  assert_times_equal(keyframeEffect.getComputedTiming().localTime,
+                     0.2 * timeRange * playbackRate,
+    'When playback rate is set on WorkletAnimation, the underlying effect\'s ' +
+    'timing should be properly updated.');
+
+  assert_approx_equals(Number(getComputedStyle(target).opacity),
+                       0.2 * timeRange * playbackRate / 1000, 0.001,
+    'When playback rate is set on WorkletAnimation, the underlying effect ' +
+    'should produce correct visual result.');
+
+}, 'When playback rate is updated, the underlying effect is properly updated ' +
+   'with the current time of its scroll-linked WorkletAnimation and produces ' +
+   'correct visual result.');
 </script>
 </body>
